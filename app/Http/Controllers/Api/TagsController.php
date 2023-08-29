@@ -30,8 +30,10 @@ class TagsController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(TagRequest $request)
-    {
-        $tag = Tag::create($request->validated());
+    {   
+        $userId = auth()->user()->id;
+
+        $tag = Tag::create([...$request->validated(), 'user_id' => $userId]);
 
         return new TagResource($tag);
     }
@@ -61,6 +63,6 @@ class TagsController extends Controller
     {
         $tag->delete();
 
-        return responce()->noContent();
+        return response()->noContent();
     }
 }

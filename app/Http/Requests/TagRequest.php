@@ -25,9 +25,9 @@ class TagRequest extends FormRequest
         return [
             'name' => [
                 'required',
-                // Rule::unique('users')->where(function ($query) {
-                //     return $query->where('user_id', $this->user()->id);
-                // }),
+                Rule::unique('users')->where(function ($query) {
+                    return $query->where('id', $this->user()->id);
+                }),
             ],
         ];
     }
