@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\AuthRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
-use App\Http\Requests\Auth\AuthRequest;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -37,7 +37,7 @@ class AuthController extends Controller
         $request->validate([
             'name' => ['required'],
             'username' => ['required'],
-            'password' => ['required']
+            'password' => ['required'],
         ]);
 
         $user = User::create($request->all());

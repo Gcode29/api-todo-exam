@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedInteger('user_id');
             $table->unsignedInteger('task_id');
+            $table->string('filename');
             $table->string('path');
             $table->timestamps();
         });

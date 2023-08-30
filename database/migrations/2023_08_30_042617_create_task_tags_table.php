@@ -11,15 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tasks', function (Blueprint $table) {
+        Schema::create('task_tags', function (Blueprint $table) {
             $table->id();
             $table->unsignedInteger('user_id');
-            $table->string('title');
-            $table->string('description');
-            $table->boolean('is_completed')->default(0);
-            $table->unsignedInteger('priority')->nullable();
-            $table->dateTime('due_date')->nullable();
-            $table->dateTime('time_completed')->nullable();
+            $table->unsignedInteger('task_id');
+            $table->unsignedInteger('tag_id');
             $table->timestamps();
         });
     }
@@ -29,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tasks');
+        Schema::dropIfExists('task_tags');
     }
 };

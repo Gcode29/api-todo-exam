@@ -2,9 +2,8 @@
 
 use App\Http\Controllers\Api\TagsController;
 use App\Http\Controllers\Api\TaskController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\UserController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,4 +19,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('users', [UserController::class, 'index']);
     route::apiResource('tasks', TaskController::class);
     route::apiResource('tags', TagsController::class);
+    route::patch('complete_task/{id}', 'App\Http\Controllers\Api\TaskController@complete');
+    route::patch('uncomplete_task/{id}', 'App\Http\Controllers\Api\TaskController@uncomplete');
 });

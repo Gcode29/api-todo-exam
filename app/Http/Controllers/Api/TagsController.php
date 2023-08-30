@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
-use App\Http\Resources\TagResource;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TagRequest;
+use App\Http\Resources\TagResource;
 use App\Models\Tag;
-use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\QueryBuilder;
 
 class TagsController extends Controller
 {
@@ -18,10 +17,10 @@ class TagsController extends Controller
     public function index()
     {
         $data = QueryBuilder::for(Tag::class)
-        ->allowedFilters([
-            AllowedFilter::partial('name'),
-        ])
-        ->paginate();
+            ->allowedFilters([
+                AllowedFilter::partial('name'),
+            ])
+            ->paginate();
 
         return TagResource::collection($data);
     }
@@ -30,7 +29,7 @@ class TagsController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(TagRequest $request)
-    {   
+    {
         $userId = auth()->user()->id;
 
         $tag = Tag::create([...$request->validated(), 'user_id' => $userId]);
