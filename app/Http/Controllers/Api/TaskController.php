@@ -9,7 +9,6 @@ use App\Models\Attachment;
 use App\Models\Task;
 use App\Models\TaskTags;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -22,14 +21,11 @@ class TaskController extends Controller
     public function index()
     {
         $tasks = QueryBuilder::for(Task::class)
-            ->when(request()->has('q'), fn ($query) =>
-                $query->where('title', 'like', '%'. request()->input('q') . '%')
-                    ->orWhere('description', 'like', '%'. request()->input('q') . '%')
+            ->when(request()->has('q'), fn ($query) => $query->where('title', 'like', '%'.request()->input('q').'%')
+                ->orWhere('description', 'like', '%'.request()->input('q').'%')
             )
-            ->when(request()->has('tag'), fn ($query) =>
-                $query->whereHas('tags', fn ($query) =>
-                    $query->where('tag_id', request()->input('tag'))
-                )
+            ->when(request()->has('tag'), fn ($query) => $query->whereHas('tags', fn ($query) => $query->where('tag_id', request()->input('tag'))
+            )
             )
             ->allowedFilters([
                 AllowedFilter::exact('is_completed'),
@@ -103,11 +99,61 @@ class TaskController extends Controller
      * Update the specified resource in storage.
      */
     public function update(TaskRequest $request, Task $task)
-    {   
-        Log::info('update');
-        $task->update($request->validated());
+    {
+        $validatedData = $request->validated();
 
-        return new TaskResource($task);
+        $task->title = $validatedData['title'];
+        $task->description = $validatedData['description'];
+
+        if ($request->has('priority')) {
+            $task->priority = $request->input('priority');
+        } else {
+            $task->priority = null;
+        }
+
+        if ($request->has('due_date')) {
+            $task->due_date = $request->input('due_date');
+        } else {
+            $task->due_date = null;
+        }
+
+        $task->save();
+
+        // Update attachments (if provided)
+        if ($request->hasFile('uploadedFiles')) {
+            // First, delete existing attachments
+            $task->attachments()->delete();
+
+            foreach ($request->file('uploadedFiles') as $image) {
+                $filename = Str::random(40).'.'.$image->getClientOriginalExtension();
+                $path = $image->storeAs('files', $filename, 'public');
+                $attachment = new Attachment();
+                $attachment->filename = $filename;
+                $attachment->path = 'storage/'.$path;
+                $attachment->task_id = $task->id;
+                $attachment->user_id = auth()->user()->id;
+                $attachment->save();
+            }
+        }
+
+        // Update task tags
+        if ($request->has('selectedTags')) {
+            // Delete existing task tags for this user and task
+            TaskTags::where('task_id', $task->id)
+                ->where('user_id', auth()->user()->id)
+                ->delete();
+
+            // Attach the selected tags with the user_id
+            foreach ($request->input('selectedTags') as $tagId) {
+                $taskTag = new TaskTags();
+                $taskTag->task_id = $task->id;
+                $taskTag->tag_id = $tagId;
+                $taskTag->user_id = auth()->user()->id;
+                $taskTag->save();
+            }
+        }
+
+        return response()->json(['message' => 'Task updated successfully']);
     }
 
     /**
@@ -121,8 +167,7 @@ class TaskController extends Controller
     }
 
     public function complete(Request $request)
-    {   
-        Log::info('complete');
+    {
         $request->validate([
             'id' => 'required',
         ]);
@@ -143,8 +188,7 @@ class TaskController extends Controller
     }
 
     public function uncomplete(Request $request)
-    {   
-        Log::info('uncomplete');
+    {
         $request->validate([
             'id' => 'required',
         ]);
@@ -165,10 +209,9 @@ class TaskController extends Controller
     }
 
     public function archive(Task $task)
-    {   
-        Log::info('archive');
+    {
         $user = auth()->user();
-        
+
         if ($task->user_id !== $user->id) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
@@ -179,13 +222,12 @@ class TaskController extends Controller
     }
 
     public function restore(int $id)
-    {   
-        
+    {
         $user = auth()->user();
 
         $task = Task::withTrashed()
-        ->findOrFail($id);
-        
+            ->findOrFail($id);
+
         if ($task->user_id !== $user->id) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }

@@ -19,7 +19,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('users', [UserController::class, 'index']);
     Route::patch('tasks/{id}/restore', [TaskController::class, 'restore']);
     Route::patch('tasks/{task}/complete', [TaskController::class, 'complete']);
-    Route::patch('tasks/{task}/uncomplete', [TaskController::class, 'uncomplete'] );
+    Route::patch('tasks/{task}/uncomplete', [TaskController::class, 'uncomplete']);
     Route::delete('tasks/{task}/archive', [TaskController::class, 'archive']);
     Route::apiResource('tasks', TaskController::class);
     Route::apiResource('tags', TagsController::class);
