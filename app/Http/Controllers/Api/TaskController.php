@@ -39,7 +39,7 @@ class TaskController extends Controller
             ->allowedSorts(['title', 'description', 'is_completed', 'due_date', 'created_at', 'time_completed'])
             ->withCount('attachments')
             ->with('tags', 'attachments')
-            ->paginate(2);
+            ->paginate(5);
 
         return TaskResource::collection($tasks);
     }
@@ -178,11 +178,14 @@ class TaskController extends Controller
         return response()->json(['success' => 'OK'], 200);
     }
 
-    public function restore(Task $task)
+    public function restore(int $id)
     {   
-        Log::info('restoring');
+        
         $user = auth()->user();
 
+        $task = Task::withTrashed()
+        ->findOrFail($id);
+        
         if ($task->user_id !== $user->id) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
