@@ -17,8 +17,10 @@ use Illuminate\Support\Facades\Route;
 */
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('users', [UserController::class, 'index']);
-    route::apiResource('tasks', TaskController::class);
-    route::apiResource('tags', TagsController::class);
-    route::patch('complete_task/{id}', 'App\Http\Controllers\Api\TaskController@complete');
-    route::patch('uncomplete_task/{id}', 'App\Http\Controllers\Api\TaskController@uncomplete');
+    Route::patch('tasks/{task}/restore', [TaskController::class, 'restore']);
+    Route::patch('tasks/{task}/complete', [TaskController::class, 'complete']);
+    Route::patch('tasks/{task}/uncomplete', [TaskController::class, 'uncomplete'] );
+    Route::delete('tasks/{task}/archive', [TaskController::class, 'archive']);
+    Route::apiResource('tasks', TaskController::class);
+    Route::apiResource('tags', TagsController::class);
 });

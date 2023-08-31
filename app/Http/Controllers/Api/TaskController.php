@@ -34,10 +34,12 @@ class TaskController extends Controller
             ->allowedFilters([
                 AllowedFilter::exact('is_completed'),
                 AllowedFilter::exact('priority'),
+                AllowedFilter::trashed(),
             ])
+            ->allowedSorts(['title', 'description', 'is_completed', 'due_date', 'created_at', 'time_completed'])
             ->withCount('attachments')
             ->with('tags', 'attachments')
-            ->paginate(10);
+            ->paginate(2);
 
         return TaskResource::collection($tasks);
     }
@@ -101,7 +103,8 @@ class TaskController extends Controller
      * Update the specified resource in storage.
      */
     public function update(TaskRequest $request, Task $task)
-    {
+    {   
+        Log::info('update');
         $task->update($request->validated());
 
         return new TaskResource($task);
@@ -112,13 +115,14 @@ class TaskController extends Controller
      */
     public function destroy(Task $task)
     {
-        $task->delete();
+        $task->forceDelete();
 
         return response()->noContent();
     }
 
     public function complete(Request $request)
-    {
+    {   
+        Log::info('complete');
         $request->validate([
             'id' => 'required',
         ]);
@@ -139,7 +143,8 @@ class TaskController extends Controller
     }
 
     public function uncomplete(Request $request)
-    {
+    {   
+        Log::info('uncomplete');
         $request->validate([
             'id' => 'required',
         ]);
@@ -157,5 +162,33 @@ class TaskController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 400);
         }
+    }
+
+    public function archive(Task $task)
+    {   
+        Log::info('archive');
+        $user = auth()->user();
+        
+        if ($task->user_id !== $user->id) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $task->delete();
+
+        return response()->json(['success' => 'OK'], 200);
+    }
+
+    public function restore(Task $task)
+    {   
+        Log::info('restoring');
+        $user = auth()->user();
+
+        if ($task->user_id !== $user->id) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $task->restore();
+
+        return response()->json(['success' => 'OK'], 200);
     }
 }
