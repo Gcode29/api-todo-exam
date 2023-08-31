@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 */
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('users', [UserController::class, 'index']);
+    // Route::delete('tasks/{taskId}/attachments/{attachmentId}', [TaskController::class, 'deleteAttachment']);
     Route::patch('tasks/{id}/restore', [TaskController::class, 'restore']);
     Route::patch('tasks/{task}/complete', [TaskController::class, 'complete']);
     Route::patch('tasks/{task}/uncomplete', [TaskController::class, 'uncomplete']);

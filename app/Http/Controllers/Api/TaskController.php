@@ -9,6 +9,7 @@ use App\Models\Attachment;
 use App\Models\Task;
 use App\Models\TaskTags;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -121,9 +122,6 @@ class TaskController extends Controller
 
         // Update attachments (if provided)
         if ($request->hasFile('uploadedFiles')) {
-            // First, delete existing attachments
-            $task->attachments()->delete();
-
             foreach ($request->file('uploadedFiles') as $image) {
                 $filename = Str::random(40).'.'.$image->getClientOriginalExtension();
                 $path = $image->storeAs('files', $filename, 'public');
@@ -235,5 +233,21 @@ class TaskController extends Controller
         $task->restore();
 
         return response()->json(['success' => 'OK'], 200);
+    }
+
+    public function deleteAttachment(Request $request, $taskId, $attachmentId)
+    {
+        $task = Task::findOrFail($taskId);
+        $attachment = $task->attachments()->findOrFail($attachmentId);
+
+        if ($attachment->user_id !== auth()->user()->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        Storage::delete('public/'.$attachment->filename);
+
+        $attachment->delete();
+
+        return response()->json(['message' => 'Attachment deleted']);
     }
 }
