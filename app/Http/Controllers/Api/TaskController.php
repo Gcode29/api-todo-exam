@@ -9,6 +9,7 @@ use App\Models\Attachment;
 use App\Models\Task;
 use App\Models\TaskTags;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -21,8 +22,18 @@ class TaskController extends Controller
     public function index()
     {
         $tasks = QueryBuilder::for(Task::class)
+            ->when(request()->has('q'), fn ($query) =>
+                $query->where('title', 'like', '%'. request()->input('q') . '%')
+                    ->orWhere('description', 'like', '%'. request()->input('q') . '%')
+            )
+            ->when(request()->has('tag'), fn ($query) =>
+                $query->whereHas('tags', fn ($query) =>
+                    $query->where('tag_id', request()->input('tag'))
+                )
+            )
             ->allowedFilters([
-                AllowedFilter::partial('title'),
+                AllowedFilter::exact('is_completed'),
+                AllowedFilter::exact('priority'),
             ])
             ->withCount('attachments')
             ->with('tags', 'attachments')
