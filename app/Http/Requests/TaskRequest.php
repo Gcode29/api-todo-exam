@@ -23,6 +23,7 @@ class TaskRequest extends FormRequest
     {
         return [
             'title' => ['required'],
+            'due_date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:today'],
             'description' => ['nullable'],
             'tags' => ['sometimes', 'nullable', 'array'],
             'attachments' => ['sometimes', 'nullable', 'array'],

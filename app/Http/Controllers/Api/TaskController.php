@@ -7,7 +7,7 @@ use App\Http\Requests\TaskRequest;
 use App\Http\Resources\TaskResource;
 use App\Models\Attachment;
 use App\Models\Task;
-use App\Models\Task_tags;
+use App\Models\TaskTags;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -20,43 +20,28 @@ class TaskController extends Controller
      */
     public function index()
     {
-        $completedTasks = QueryBuilder::for(Task::class)
+        $tasks = QueryBuilder::for(Task::class)
             ->allowedFilters([
                 AllowedFilter::partial('title'),
             ])
-            ->where('is_completed', 1)
             ->withCount('attachments')
             ->with('tags', 'attachments')
-            ->paginate(5);
+            ->paginate(10);
 
-        $uncompletedTasks = QueryBuilder::for(Task::class)
-            ->allowedFilters([
-                AllowedFilter::partial('title'),
-            ])
-            ->where('is_completed', 0)
-            ->withCount('attachments')
-            ->with('tags', 'attachments')
-            ->paginate(5);
-
-        return [
-            'completedTasks' => TaskResource::collection($completedTasks),
-            'uncompletedTasks' => TaskResource::collection($uncompletedTasks),
-        ];
+        return TaskResource::collection($tasks);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(TaskRequest $request)
     {
-        $validatedData = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-        ]);
+        $validatedData = $request->validated();
 
         $task = new Task();
         $task->title = $validatedData['title'];
         $task->description = $validatedData['description'];
+
         if ($request->has('priority')) {
             $task->priority = $request->input('priority');
         }
@@ -84,7 +69,7 @@ class TaskController extends Controller
 
         if ($request->has('selectedTags')) {
             foreach ($request->input('selectedTags') as $tagId) {
-                $tags = new Task_tags();
+                $tags = new TaskTags();
                 $tags->user_id = auth()->user()->id;
                 $tags->task_id = $task->id;
                 $tags->tag_id = $tagId;
