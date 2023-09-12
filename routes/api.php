@@ -15,13 +15,13 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::middleware(['auth:sanctum'])->group(function () {
+// Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('users', [UserController::class, 'index']);
     // Route::delete('tasks/{taskId}/attachments/{attachmentId}', [TaskController::class, 'deleteAttachment']);
-    Route::patch('tasks/{id}/restore', [TaskController::class, 'restore']);
+    Route::patch('tasks/{task}/restore', [TaskController::class, 'restore']);
     Route::patch('tasks/{task}/complete', [TaskController::class, 'complete']);
     Route::patch('tasks/{task}/uncomplete', [TaskController::class, 'uncomplete']);
     Route::delete('tasks/{task}/archive', [TaskController::class, 'archive']);
     Route::apiResource('tasks', TaskController::class);
     Route::apiResource('tags', TagsController::class);
-});
+// });

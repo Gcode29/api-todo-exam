@@ -22,6 +22,7 @@ class TaskController extends Controller
     public function index()
     {
         $tasks = QueryBuilder::for(Task::class)
+            ->where('user_id', auth()->user()->id)
             ->when(request()->has('q'), fn ($query) => $query->where('title', 'like', '%'.request()->input('q').'%')
                 ->orWhere('description', 'like', '%'.request()->input('q').'%')
             )
@@ -86,6 +87,8 @@ class TaskController extends Controller
                 $tags->save();
             }
         }
+
+        return response()->json(['message' => 'Task created successfully']);
     }
 
     /**
@@ -118,6 +121,7 @@ class TaskController extends Controller
             $task->due_date = null;
         }
 
+        $task->user_id = auth()->user()->id;
         $task->save();
 
         // Update attachments (if provided)
@@ -159,6 +163,12 @@ class TaskController extends Controller
      */
     public function destroy(Task $task)
     {
+        if ($task->user_id !== auth()->user()->id) {
+            return response()->json([
+                'message' => 'Unauthorized Access'
+            ], 401);
+        }
+
         $task->forceDelete();
 
         return response()->noContent();
@@ -181,7 +191,7 @@ class TaskController extends Controller
 
             return response()->json(['success' => 'OK'], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
+            return response()->json(['error' => $e->getMessage()], 401);
         }
     }
 
@@ -193,7 +203,7 @@ class TaskController extends Controller
 
         try {
             $taskId = $request->input('id');
-            $task = Task::where('user_id', auth()->user()->id)
+            $task = Task::where('user_id', auth()->user->id)
                 ->findOrFail($taskId);
 
             $task->is_completed = 0;
@@ -208,25 +218,24 @@ class TaskController extends Controller
 
     public function archive(Task $task)
     {
-        $user = auth()->user();
-
-        if ($task->user_id !== $user->id) {
+        if ($task->user_id !== auth()->user()->id) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        $task->delete();
-
-        return response()->json(['success' => 'OK'], 200);
+        try {
+            $task->delete();
+            return response()->json(['success' => 'OK'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
     }
 
     public function restore(int $id)
     {
-        $user = auth()->user();
-
         $task = Task::withTrashed()
             ->findOrFail($id);
 
-        if ($task->user_id !== $user->id) {
+        if ($task->user_id !== auth()->user->id) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
